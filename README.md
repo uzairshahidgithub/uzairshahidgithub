@@ -2,241 +2,179 @@
 
 ###
 
+<!-- ==================== TECHNOLOGY STACK ==================== -->
+
 <div align="left">
 
-  <!-- ==================== LANGUAGES ==================== -->
+  <style>
+    .tech-stack {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      max-width: 100%;
+    }
 
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg"
-       height="40" alt="python logo" />
-  <img width="12" />
+    .tech-stack img {
+      height: 40px;
+      width: 40px;
+      object-fit: contain;
+    }
+  </style>
 
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/cplusplus/cplusplus-original.svg"
-       height="40" alt="c++ logo" />
-  <img width="12" />
+  <div class="tech-stack">
 
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg"
-       height="40" alt="javascript logo" />
-  <img width="12" />
+    <!-- Programming -->
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg"
+         alt="Python" title="Python" />
 
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg"
-       height="40" alt="typescript logo" />
-  <img width="12" />
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/cplusplus/cplusplus-original.svg"
+         alt="C++" title="C++" />
 
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/go/go-original.svg"
-       height="40" alt="go logo" />
-  <img width="12" />
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg"
+         alt="JavaScript" title="JavaScript" />
 
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/rust/rust-original.svg"
-       height="40" alt="rust logo" />
-  <img width="12" />
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg"
+         alt="TypeScript" title="TypeScript" />
 
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/bash/bash-original.svg"
-       height="40" alt="bash logo" />
-  <img width="12" />
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/go/go-original.svg"
+         alt="Go" title="Go" />
 
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/powershell/powershell-original.svg"
-       height="40" alt="powershell logo" />
-  <img width="12" />
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/rust/rust-original.svg"
+         alt="Rust" title="Rust" />
 
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/bash/bash-original.svg"
+         alt="Bash" title="Bash" />
 
-  <!-- ==================== WEB / APPLICATION ==================== -->
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/powershell/powershell-original.svg"
+         alt="PowerShell" title="PowerShell" />
 
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg"
-       height="40" alt="html5 logo" />
-  <img width="12" />
 
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg"
-       height="40" alt="css3 logo" />
-  <img width="12" />
+    <!-- Web -->
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg"
+         alt="HTML5" title="HTML5" />
 
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg"
-       height="40" alt="nodejs logo" />
-  <img width="12" />
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg"
+         alt="CSS3" title="CSS3" />
 
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg"
-       height="40" alt="react logo" />
-  <img width="12" />
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg"
+         alt="Node.js" title="Node.js" />
 
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/express/express-original.svg"
-       height="40" alt="express logo" />
-  <img width="12" />
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg"
+         alt="React" title="React" />
 
 
-  <!-- ==================== OPERATING SYSTEMS ==================== -->
+    <!-- Operating Systems -->
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linux/linux-original.svg"
+         alt="Linux" title="Linux" />
 
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linux/linux-original.svg"
-       height="40" alt="linux logo" />
-  <img width="12" />
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/debian/debian-original.svg"
+         alt="Debian" title="Debian" />
 
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/debian/debian-original.svg"
-       height="40" alt="debian logo" />
-  <img width="12" />
+    <img src="https://cdn.simpleicons.org/kalilinux"
+         alt="Kali Linux" title="Kali Linux" />
 
-  <img src="https://cdn.simpleicons.org/kalilinux"
-       height="40" alt="kali linux logo" />
-  <img width="12" />
 
+    <!-- Cloud -->
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/azure/azure-original.svg"
+         alt="Microsoft Azure" title="Microsoft Azure" />
 
-  <!-- ==================== CLOUD ==================== -->
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg"
+         alt="AWS" title="AWS" />
 
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/azure/azure-original.svg"
-       height="40" alt="azure logo" />
-  <img width="12" />
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/googlecloud/googlecloud-original.svg"
+         alt="Google Cloud" title="Google Cloud" />
 
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg"
-       height="40" alt="aws logo" />
-  <img width="12" />
+    <img src="https://cdn.simpleicons.org/cloudflare"
+         alt="Cloudflare" title="Cloudflare" />
 
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/googlecloud/googlecloud-original.svg"
-       height="40" alt="google cloud logo" />
-  <img width="12" />
 
-  <img src="https://cdn.simpleicons.org/cloudflare"
-       height="40" alt="cloudflare logo" />
-  <img width="12" />
+    <!-- Networking / Security -->
+    <img src="https://cdn.simpleicons.org/wireshark"
+         alt="Wireshark" title="Wireshark" />
 
+    <img src="https://cdn.simpleicons.org/nmap"
+         alt="Nmap" title="Nmap" />
 
-  <!-- ==================== NETWORK SECURITY ==================== -->
+    <img src="https://cdn.simpleicons.org/suricata"
+         alt="Suricata" title="Suricata" />
 
-  <img src="https://cdn.simpleicons.org/wireshark"
-       height="40" alt="wireshark logo" />
-  <img width="12" />
+    <img src="https://cdn.simpleicons.org/zeek"
+         alt="Zeek" title="Zeek" />
 
-  <img src="https://cdn.simpleicons.org/owasp"
-       height="40" alt="owasp logo" />
-  <img width="12" />
+    <img src="https://cdn.simpleicons.org/owasp"
+         alt="OWASP" title="OWASP" />
 
-  <img src="https://cdn.simpleicons.org/suricata"
-       height="40" alt="suricata logo" />
-  <img width="12" />
+    <img src="https://cdn.simpleicons.org/burpsuite"
+         alt="Burp Suite" title="Burp Suite" />
 
-  <img src="https://cdn.simpleicons.org/zeek"
-       height="40" alt="zeek logo" />
-  <img width="12" />
+    <img src="https://cdn.simpleicons.org/metasploit"
+         alt="Metasploit" title="Metasploit" />
 
 
-  <!-- ==================== OFFENSIVE SECURITY ==================== -->
+    <!-- AppSec -->
+    <img src="https://cdn.simpleicons.org/owaspzap"
+         alt="OWASP ZAP" title="OWASP ZAP" />
 
-  <img src="https://cdn.simpleicons.org/burpsuite"
-       height="40" alt="burp suite logo" />
-  <img width="12" />
+    <img src="https://cdn.simpleicons.org/snyk"
+         alt="Snyk" title="Snyk" />
 
-  <img src="https://cdn.simpleicons.org/metasploit"
-       height="40" alt="metasploit logo" />
-  <img width="12" />
+    <img src="https://cdn.simpleicons.org/semgrep"
+         alt="Semgrep" title="Semgrep" />
 
-  <img src="https://cdn.simpleicons.org/nmap"
-       height="40" alt="nmap logo" />
-  <img width="12" />
 
-  <img src="https://cdn.simpleicons.org/owaspzap"
-       height="40" alt="owasp zap logo" />
-  <img width="12" />
+    <!-- SIEM / Detection -->
+    <img src="https://cdn.simpleicons.org/splunk"
+         alt="Splunk" title="Splunk" />
 
-  <img src="https://cdn.simpleicons.org/sqlite"
-       height="40" alt="sqlmap logo" />
-  <img width="12" />
+    <img src="https://cdn.simpleicons.org/elastic"
+         alt="Elastic" title="Elastic" />
 
 
-  <!-- ==================== DFIR / MALWARE ANALYSIS ==================== -->
+    <!-- DFIR / Reverse Engineering -->
+    <img src="https://cdn.simpleicons.org/yara"
+         alt="YARA" title="YARA" />
 
-  <img src="https://cdn.simpleicons.org/ghidra"
-       height="40" alt="ghidra logo" />
-  <img width="12" />
 
-  <img src="https://cdn.simpleicons.org/yara"
-       height="40" alt="yara logo" />
-  <img width="12" />
+    <!-- Containers / DevSecOps -->
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg"
+         alt="Docker" title="Docker" />
 
-  <img src="https://cdn.simpleicons.org/volatility"
-       height="40" alt="volatility logo" />
-  <img width="12" />
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/kubernetes/kubernetes-original.svg"
+         alt="Kubernetes" title="Kubernetes" />
 
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/terraform/terraform-original.svg"
+         alt="Terraform" title="Terraform" />
 
-  <!-- ==================== SIEM / DETECTION ==================== -->
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/ansible/ansible-original.svg"
+         alt="Ansible" title="Ansible" />
 
-  <img src="https://cdn.simpleicons.org/splunk"
-       height="40" alt="splunk logo" />
-  <img width="12" />
 
-  <img src="https://cdn.simpleicons.org/elastic"
-       height="40" alt="elastic logo" />
-  <img width="12" />
+    <!-- Databases -->
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/sqlite/sqlite-original.svg"
+         alt="SQLite" title="SQLite" />
 
-  <img src="https://cdn.simpleicons.org/wazuh"
-       height="40" alt="wazuh logo" />
-  <img width="12" />
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/microsoftsqlserver/microsoftsqlserver-plain.svg"
+         alt="Microsoft SQL Server" title="Microsoft SQL Server" />
 
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg"
+         alt="PostgreSQL" title="PostgreSQL" />
 
-  <!-- ==================== VULNERABILITY / APPSEC ==================== -->
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mongodb/mongodb-original.svg"
+         alt="MongoDB" title="MongoDB" />
 
-  <img src="https://cdn.simpleicons.org/tenable"
-       height="40" alt="tenable logo" />
-  <img width="12" />
 
-  <img src="https://cdn.simpleicons.org/semgrep"
-       height="40" alt="semgrep logo" />
-  <img width="12" />
+    <!-- Development -->
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg"
+         alt="Git" title="Git" />
 
-  <img src="https://cdn.simpleicons.org/snyk"
-       height="40" alt="snyk logo" />
-  <img width="12" />
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg"
+         alt="GitHub" title="GitHub" />
 
-
-  <!-- ==================== CONTAINERS / DEVSECOPS ==================== -->
-
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg"
-       height="40" alt="docker logo" />
-  <img width="12" />
-
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/kubernetes/kubernetes-original.svg"
-       height="40" alt="kubernetes logo" />
-  <img width="12" />
-
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/terraform/terraform-original.svg"
-       height="40" alt="terraform logo" />
-  <img width="12" />
-
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/ansible/ansible-original.svg"
-       height="40" alt="ansible logo" />
-  <img width="12" />
-
-
-  <!-- ==================== DATABASES ==================== -->
-
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/sqlite/sqlite-original.svg"
-       height="40" alt="sqlite logo" />
-  <img width="12" />
-
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/microsoftsqlserver/microsoftsqlserver-plain.svg"
-       height="40" alt="microsoft sql server logo" />
-  <img width="12" />
-
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg"
-       height="40" alt="postgresql logo" />
-  <img width="12" />
-
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mongodb/mongodb-original.svg"
-       height="40" alt="mongodb logo" />
-  <img width="12" />
-
-
-  <!-- ==================== DEVELOPMENT / AUTOMATION ==================== -->
-
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg"
-       height="40" alt="git logo" />
-  <img width="12" />
-
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg"
-       height="40" alt="github logo" />
-  <img width="12" />
-
-  <img src="https://cdn.simpleicons.org/githubactions"
-       height="40" alt="github actions logo" />
-  <img width="12" />
-
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vscode/vscode-original.svg"
-       height="40" alt="visual studio code logo" />
+    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vscode/vscode-original.svg"
+         alt="Visual Studio Code" title="Visual Studio Code" />
+         
+  </div>
 
 </div>
 
