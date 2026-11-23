@@ -43,6 +43,8 @@
   </picture>
 </div>
 
+<br />
+
 <div align="center">
   <!-- Followers section: React Bits ShinyText heading + curved Text Path followers (scripts/followers_path.py + .github/workflows/followers-path.yml) -->
   <picture>
