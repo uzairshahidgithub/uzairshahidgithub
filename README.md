@@ -46,12 +46,18 @@
 <br />
 
 <div align="center">
-  <!-- Followers section: React Bits ShinyText heading + curved Text Path followers (scripts/followers_path.py + .github/workflows/followers-path.yml) -->
+  <!-- Followers section heading: React Bits ShinyText (scripts/followers_path.py + .github/workflows/followers-path.yml) -->
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/followers-heading.svg" />
     <source media="(prefers-color-scheme: light)" srcset="assets/followers-heading-light.svg" />
     <img src="assets/followers-heading.svg" alt="Special Thanks for My Followers — Muhammad Uzair (@uzairshahidgithub)" />
-  </picture><br />
+  </picture>
+</div>
+
+<br />
+
+<div align="center">
+  <!-- Followers curved Text Path (scripts/followers_path.py + .github/workflows/followers-path.yml) -->
   <a href="https://github.com/uzairshahidgithub?tab=followers" target="_blank" rel="noopener noreferrer" title="GitHub Followers of Muhammad Uzair (@uzairshahidgithub)">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="assets/followers-path.svg" />
