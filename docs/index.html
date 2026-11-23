@@ -325,11 +325,14 @@
       position: relative;
       flex: 1 1 auto;
       height: 100%;
+      font-size: var(--ow-font-size);
       overflow: hidden;
       cursor: grab;
       user-select: none;
       touch-action: none;
       outline: none;
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 12%, #000 88%, transparent 100%);
+      mask-image: linear-gradient(to bottom, transparent 0%, #000 12%, #000 88%, transparent 100%);
     }
 
     .option-wheel--dragging {
@@ -502,9 +505,8 @@
       let userInteracted = false;
 
       function getRowHeight() {
-        const remPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-        const fontRem = parseFloat(getComputedStyle(wheelEl).getPropertyValue('--ow-font-size')) || CONFIG.fontSizeRem;
-        return Math.max(fontRem * CONFIG.spacing * remPx, 1);
+        const fontPx = parseFloat(getComputedStyle(wheelEl).fontSize) || (CONFIG.fontSizeRem * 16);
+        return Math.max(fontPx * CONFIG.spacing, 1);
       }
 
       let itemEls = [];
@@ -523,7 +525,14 @@
             }
             if (index !== selectedIndex) {
               e.preventDefault();
-              applyTarget(index, true);
+              const cur = target;
+              const n = REPOS.length;
+              let d = index - (((cur % n) + n) % n);
+              if (CONFIG.loop && n > 1) {
+                if (d > n / 2) d -= n;
+                else if (d < -n / 2) d += n;
+              }
+              applyTarget(cur + d, true);
             }
           });
 

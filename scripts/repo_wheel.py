@@ -48,11 +48,11 @@ EXCLUDED_REPOS = {
     "cybertrek-registration",
 }
 
-FULL_W = 680
+FULL_W = 720
 ROW_H = 40
-WHEEL_H = 320
+WHEEL_H = 380
 
-# Conservative Poppins 500 @ 20px character widths so long titles never clip at left curve pullback
+# Conservative Poppins 500 @ 20px character widths for safe horizontal fit
 _W20 = {
     "-": 9.2, "_": 11.5, ".": 5.5, " ": 5.8,
     "i": 5.6, "l": 5.6, "j": 6.0, "t": 7.6, "f": 7.6, "r": 8.4, "I": 6.0,
@@ -69,7 +69,7 @@ def _smootherstep(t):
     return t * t * t * (t * (t * 6.0 - 15.0) + 10.0)
 
 
-def _vertical_fade_stops(edge_frac=0.22):
+def _vertical_fade_stops(edge_frac=0.18):
     span = max(0.0, min(0.45, edge_frac)) * 100.0
     stops = []
     for i in range(13):
@@ -79,6 +79,10 @@ def _vertical_fade_stops(edge_frac=0.22):
         a = _smootherstep(i / 12.0)
         stops.append(f'<stop offset="{(100.0 - span * i / 12.0):.2f}%" stop-color="#ffffff" stop-opacity="{a:.4f}" />')
     return "".join(stops)
+
+
+def _hex_lerp_str(c1, c2, t):
+    return _lerp_hex(c1, c2, max(0.0, min(1.0, t)))
 
 
 def fetch_top_repos(user, limit=9, token=None):
@@ -145,10 +149,10 @@ def build_animated_wheel_svg(
     height=WHEEL_H,
     step_s=3.6,
 ):
-    """Build single continuous slowly auto-rotating OptionWheel SVG for GitHub README."""
+    """Build single slowly auto-scrolling React Bits <OptionWheel side='right' loop /> SVG for GitHub README."""
     outfit_b64, poppins_b64 = _fonts()
 
-    # Ensure >= 7 slots even if user has fewer repos so circular cylinder stays full without jumps
+    # Ensure >= 7 slots even if user has fewer repos so circular wheel wraps seamlessly
     base_list = repos_meta or [
         {"name": n, "description": "", "url": f"https://github.com/{user}/{n}"}
         for n in DEFAULT_REPOS[:1]
@@ -160,95 +164,90 @@ def build_animated_wheel_svg(
     cycle_s = k_slots * step_s
 
     cy = height / 2.0
-    anchor_x = width - 56.0  # 624px right text anchor cleanly centered without right-side rail/dot
-    row_h = 44.0
-    tilt_deg = 2.5
-    tilt_rad = math.radians(tilt_deg)
-    R = (row_h * 1.15) / tilt_rad
-    curve = 1.25
+    inset = 72.0
+    anchor_x = width - inset  # 648px right anchor; +curve pulls slightly rightward safely inside 720px
 
-    # Generate silky continuous 40-step cylinder path:
-    # u=0 -> d=+K/2 (bottom behind mask), u=0.5 -> d=0 (centered inside emerald lens), u=1 -> d=-K/2 (top behind mask)
-    n_kf = 40
-    pos_kf = []
-    tilt_kf = []
+    # Exact React Bits <OptionWheel side="right" /> circular kinematics:
+    # mirror = -1, R = rowH / tiltRad, y = R * sin(ang), x = -mirror * R * (1 - cos(ang)) * curve, rot = mirror * ang
+    row_h = 39.0
+    tilt_deg = 4.6
+    tilt_rad = math.radians(tilt_deg)
+    R = row_h / tilt_rad
+    curve = 1.0
+    mirror = -1.0  # side="right"
+    blur_step = 1.25
+    fade_step = 0.22
+    min_op = 0.05
+
+    rest_col = "#8b949e" if dark_mode else "#6e7781"
+    active_col = "#ffffff" if dark_mode else "#1f2328"
+
+    n_kf = 48
+    slot_kf = []
+    text_kf = []
     half_k = k_slots / 2.0
-    vis_cutoff = min(half_k - 0.15, 3.65)
-    fade_edge = max(2.0, vis_cutoff - 0.9)
+    vis_cutoff = min(half_k - 0.12, 3.85)
+    fade_edge = max(2.2, vis_cutoff - 0.75)
 
     for step in range(n_kf + 1):
         u = step / n_kf
         pct = u * 100.0
-        d = (0.5 - u) * k_slots  # +half_k down to -half_k
-        ang = max(-math.pi * 0.42, min(math.pi * 0.42, d * tilt_rad))
-        dy = R * math.sin(ang)
-        arc_dx = -(R * (1.0 - math.cos(ang))) * curve * 4.5
-        rot_deg = math.degrees(ang) * 0.92
+        d = (0.5 - u) * k_slots  # +half_k (bottom) -> 0 (center) -> -half_k (top)
         dist = abs(d)
-        sc = max(0.84, 1.07 - dist * 0.055)
+        ang = max(-math.pi / 2.0, min(math.pi / 2.0, d * tilt_rad))
+
+        y = R * math.sin(ang)
+        x = -mirror * R * (1.0 - math.cos(ang)) * curve
+        rot = (mirror * ang * 180.0) / math.pi
+
         if dist >= vis_cutoff:
             op = 0.0
         elif dist > fade_edge:
             t_fade = (vis_cutoff - dist) / max(0.01, vis_cutoff - fade_edge)
-            op = 0.20 * _smootherstep(t_fade)
+            op = max(min_op, 1.0 - dist * fade_step) * _smootherstep(t_fade)
         else:
-            op = max(0.20, 1.0 - dist * 0.22)
+            op = max(min_op, 1.0 - dist * fade_step)
 
-        pos_kf.append(
-            f"{pct:.2f}%{{transform:translate3d({arc_dx:.2f}px,{dy:.2f}px,0);opacity:{op:.3f}}}"
+        p_blend = max(0.0, 1.0 - min(dist, 1.0))
+        blur_px = dist * blur_step
+        fill_hex = _hex_lerp_str(rest_col, active_col, p_blend)
+
+        slot_kf.append(
+            f"{pct:.2f}%{{transform:translate3d({x:.2f}px,{y:.2f}px,0) rotate({rot:.3f}deg);"
+            f"opacity:{op:.3f};filter:blur({blur_px:.2f}px)}}"
         )
-        tilt_kf.append(
-            f"{pct:.2f}%{{transform:rotate({rot_deg:.2f}deg) scale({sc:.3f})}}"
-        )
+        text_kf.append(f"{pct:.2f}%{{fill:{fill_hex}}}")
 
-    if dark_mode:
-        rest_col = "#7d8590"
-        active_col = "#ffffff"
-    else:
-        rest_col = "#6e7781"
-        active_col = "#1f2328"
-
-    rest_items = []
-    lit_items = []
-    max_arc_pullback = abs(R * (1.0 - math.cos(3.2 * tilt_rad)) * curve * 4.5)
-    max_w_allowed = anchor_x - max_arc_pullback - 44.0
+    items_xml = []
+    max_w_allowed = anchor_x - 38.0
     for idx, meta in enumerate(slots):
         name = meta["name"]
         url = meta.get("url") or f"https://github.com/{user}/{name}"
-        font_px = 20.5
+        font_px = 22.0
         w_est = _est_text_width(name, font_px)
         if w_est > max_w_allowed:
-            font_px = max(12.0, font_px * (max_w_allowed / w_est))
-            w_est = _est_text_width(name, font_px)
-        half_w = w_est / 2.0
-
-        # Shift initial phase so `mid_idx` (Fedora-Security-Automation) sits dead-center at t=0
+            font_px = max(13.0, font_px * (max_w_allowed / w_est))
         delay_s = -(((0.5 - (mid_idx - idx) / k_slots) % 1.0) * cycle_s)
         y_base = font_px * 0.34
 
-        item_inner = (
-            f'<g class="w-pos" style="animation-delay:{delay_s:.3f}s">'
-            f'<g transform="translate({-half_w:.1f},0)">'
-            f'<g class="w-tilt" style="animation-delay:{delay_s:.3f}s">'
-            f'<g transform="translate({half_w:.1f},0)">'
+        # Pivot sits natively at (0, 0) where text-anchor="end" right edge meets the curve (transform-origin: right center)
+        items_xml.append(
+            f'<g class="ow-slot" style="animation-delay:{delay_s:.3f}s">'
             f'<a href="{html.escape(url)}" target="_blank" rel="noopener noreferrer">'
             f'<title>{html.escape(name)}</title>'
-            f'<text class="ow-item" x="0" y="{y_base:.1f}" text-anchor="end" style="font-size:{font_px:.1f}px">'
-            f'{html.escape(name)}</text></a>'
-            f'</g></g></g></g>'
+            f'<text class="ow-txt" x="0" y="{y_base:.1f}" text-anchor="end" '
+            f'style="font-size:{font_px:.1f}px;animation-delay:{delay_s:.3f}s">'
+            f'{html.escape(name)}</text></a></g>'
         )
-        rest_items.append(item_inner)
-        lit_items.append(item_inner)
 
     css = f"""
 @font-face{{font-family:'WheelMed';font-style:normal;font-weight:500;src:url(data:font/woff2;base64,{poppins_b64}) format('woff2');}}
-.ow-rest .ow-item{{font-family:'WheelMed',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-weight:500;fill:{rest_col};letter-spacing:-0.3px}}
-.ow-lit .ow-item{{font-family:'WheelMed',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-weight:500;fill:{active_col};letter-spacing:-0.3px}}
-.w-pos{{will-change:transform,opacity;animation:w-arc {cycle_s:.2f}s linear infinite}}
-.w-tilt{{will-change:transform;animation:w-tilt {cycle_s:.2f}s linear infinite}}
-@keyframes w-arc{{{"".join(pos_kf)}}}
-@keyframes w-tilt{{{"".join(tilt_kf)}}}
-@media (prefers-reduced-motion:reduce){{.w-pos,.w-tilt{{animation-play-state:paused!important}}}}
+@font-face{{font-family:'WheelReg';font-style:normal;font-weight:400;src:url(data:font/woff2;base64,{outfit_b64}) format('woff2');}}
+.ow-slot{{transform-origin:0px 0px;will-change:transform,opacity,filter;animation:ow-roll {cycle_s:.2f}s linear infinite}}
+.ow-txt{{font-family:'WheelMed','WheelReg',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-weight:500;letter-spacing:-0.3px;animation:ow-col {cycle_s:.2f}s linear infinite}}
+@keyframes ow-roll{{{"".join(slot_kf)}}}
+@keyframes ow-col{{{"".join(text_kf)}}}
+@media (prefers-reduced-motion:reduce){{.ow-slot,.ow-txt{{animation-play-state:paused!important}}}}
 """
 
     repo_names = ", ".join(html.escape(m["name"]) for m in base_list)
@@ -259,38 +258,13 @@ def build_animated_wheel_svg(
         f'<desc>Auto-rotating Open Source Repositories of Muhammad Uzair (@{html.escape(user)}): {repo_names}</desc>'
         f'<defs>'
         f'<style>{css}</style>'
-        f'<linearGradient id="rw-edge" x1="0%" y1="0%" x2="0%" y2="100%">{_vertical_fade_stops(0.22)}</linearGradient>'
+        f'<linearGradient id="rw-edge" x1="0%" y1="0%" x2="0%" y2="100%">{_vertical_fade_stops(0.18)}</linearGradient>'
         f'<mask id="rw-fade-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="{width}" height="{height}">'
         f'<rect x="0" y="0" width="{width}" height="{height}" fill="url(#rw-edge)" />'
         f'</mask>'
-        # Complementary center lens & outside masks prevent any double-font ghosting while cross-fading smoothly
-        f'<linearGradient id="rw-lens-grad" x1="0%" y1="0%" x2="0%" y2="100%">'
-        f'<stop offset="39%" stop-color="#000000" />'
-        f'<stop offset="44%" stop-color="#ffffff" />'
-        f'<stop offset="56%" stop-color="#ffffff" />'
-        f'<stop offset="61%" stop-color="#000000" />'
-        f'</linearGradient>'
-        f'<linearGradient id="rw-out-grad" x1="0%" y1="0%" x2="0%" y2="100%">'
-        f'<stop offset="39%" stop-color="#ffffff" />'
-        f'<stop offset="44%" stop-color="#000000" />'
-        f'<stop offset="56%" stop-color="#000000" />'
-        f'<stop offset="61%" stop-color="#ffffff" />'
-        f'</linearGradient>'
-        f'<mask id="rw-lens-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="{width}" height="{height}">'
-        f'<rect x="0" y="0" width="{width}" height="{height}" fill="url(#rw-lens-grad)" />'
-        f'</mask>'
-        f'<mask id="rw-out-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="{width}" height="{height}">'
-        f'<rect x="0" y="0" width="{width}" height="{height}" fill="url(#rw-out-grad)" />'
-        f'</mask>'
         f'</defs>'
-        # Pure OptionWheel auto-scroller with zero dot or selector clutter
         f'<g mask="url(#rw-fade-mask)">'
-        f'<g mask="url(#rw-out-mask)">'
-        f'<g class="ow-rest" transform="translate({anchor_x:.1f},{cy:.1f})">{"".join(rest_items)}</g>'
-        f'</g>'
-        f'<g mask="url(#rw-lens-mask)">'
-        f'<g class="ow-lit" transform="translate({anchor_x:.1f},{cy:.1f})">{"".join(lit_items)}</g>'
-        f'</g>'
+        f'<g transform="translate({anchor_x:.1f},{cy:.1f})">{"".join(items_xml)}</g>'
         f'</g>'
         f'</svg>\n'
     )
