@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["scripts/contribution_map.py"]
+    paths: ["scripts/**"]
 
 permissions:
   contents: write
@@ -29,7 +29,7 @@ jobs:
           # Optional: add a classic PAT as the CONTRIB_TOKEN secret (scopes: read:user, read:org)
           # to include contributions to organizations that restrict third-party access.
           GITHUB_TOKEN: ${{ secrets.CONTRIB_TOKEN || secrets.GITHUB_TOKEN }}
-        run: python scripts/contribution_map.py --user "${{ github.repository_owner }}" --top 10 --out assets/contribution-map.svg
+        run: python scripts/contribution_map.py --user "${{ github.repository_owner }}" --top-orgs 8 --top-people 10 --out assets/contribution-map.svg
 
       - name: Commit result
         run: |
