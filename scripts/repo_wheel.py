@@ -160,7 +160,7 @@ def build_animated_wheel_svg(
     cycle_s = k_slots * step_s
 
     cy = height / 2.0
-    anchor_x = width - 74.0  # 606px right text anchor, leaving 74px right margin for rail/indicator + glow
+    anchor_x = width - 56.0  # 624px right text anchor cleanly centered without right-side rail/dot
     row_h = 44.0
     tilt_deg = 2.5
     tilt_rad = math.radians(tilt_deg)
@@ -204,17 +204,9 @@ def build_animated_wheel_svg(
     if dark_mode:
         rest_col = "#7d8590"
         active_col = "#ffffff"
-        aura_col, aura_op = "#3fb950", "0.14"
-        rail_col, rail_op = "#3fb950", "0.24"
-        dot_col = "#56d364"
-        glow_op = "0.45"
     else:
         rest_col = "#6e7781"
-        active_col = "#0d4423"
-        aura_col, aura_op = "#2da44e", "0.10"
-        rail_col, rail_op = "#1a7f37", "0.20"
-        dot_col = "#1a7f37"
-        glow_op = "0.22"
+        active_col = "#1f2328"
 
     rest_items = []
     lit_items = []
@@ -247,16 +239,6 @@ def build_animated_wheel_svg(
         )
         rest_items.append(item_inner)
         lit_items.append(item_inner)
-
-    # Subtle curved wheel rim arc + horizontal focus glow across y=cy (no hard box edges)
-    top_ang = -3.1 * tilt_rad
-    bot_ang = 3.1 * tilt_rad
-    rx_arc = anchor_x + 24.0
-    arc_x0 = rx_arc - (R * (1.0 - math.cos(top_ang))) * curve * 4.5
-    arc_y0 = cy + R * math.sin(top_ang)
-    arc_x1 = rx_arc - (R * (1.0 - math.cos(bot_ang))) * curve * 4.5
-    arc_y1 = cy + R * math.sin(bot_ang)
-    ctrl_x = rx_arc + 8.0
 
     css = f"""
 @font-face{{font-family:'WheelMed';font-style:normal;font-weight:500;src:url(data:font/woff2;base64,{poppins_b64}) format('woff2');}}
@@ -300,27 +282,14 @@ def build_animated_wheel_svg(
         f'<mask id="rw-out-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="{width}" height="{height}">'
         f'<rect x="0" y="0" width="{width}" height="{height}" fill="url(#rw-out-grad)" />'
         f'</mask>'
-        f'<radialGradient id="rw-center-aura" cx="50%" cy="50%" r="50%">'
-        f'<stop offset="0%" stop-color="{aura_col}" stop-opacity="{aura_op}" />'
-        f'<stop offset="65%" stop-color="{aura_col}" stop-opacity="0.04" />'
-        f'<stop offset="100%" stop-color="{aura_col}" stop-opacity="0.0" />'
-        f'</radialGradient>'
-        f'<filter id="rw-center-glow" x="-10%" y="-40%" width="120%" height="180%">'
-        f'<feDropShadow dx="0" dy="0" stdDeviation="4.5" flood-color="{dot_col}" flood-opacity="{glow_op}" />'
-        f'</filter>'
         f'</defs>'
-        # Borderless soft emerald backlight aura + curved wheel rim guide & indicator dot
+        # Pure OptionWheel auto-scroller with zero dot or selector clutter
         f'<g mask="url(#rw-fade-mask)">'
-        f'<ellipse cx="{width * 0.54:.1f}" cy="{cy:.1f}" rx="250" ry="30" fill="url(#rw-center-aura)" />'
-        f'<path d="M {arc_x0:.1f} {arc_y0:.1f} Q {ctrl_x:.1f} {cy:.1f} {arc_x1:.1f} {arc_y1:.1f}" '
-        f'fill="none" stroke="{rail_col}" stroke-opacity="{rail_op}" stroke-width="1.2" stroke-linecap="round" />'
-        f'<circle cx="{ctrl_x - 3:.1f}" cy="{cy:.1f}" r="3.2" fill="{dot_col}" fill-opacity="0.88" />'
-        # Non-overlapping complementary masks: zero double-render ghosting during roll transitions
         f'<g mask="url(#rw-out-mask)">'
         f'<g class="ow-rest" transform="translate({anchor_x:.1f},{cy:.1f})">{"".join(rest_items)}</g>'
         f'</g>'
         f'<g mask="url(#rw-lens-mask)">'
-        f'<g class="ow-lit" filter="url(#rw-center-glow)" transform="translate({anchor_x:.1f},{cy:.1f})">{"".join(lit_items)}</g>'
+        f'<g class="ow-lit" transform="translate({anchor_x:.1f},{cy:.1f})">{"".join(lit_items)}</g>'
         f'</g>'
         f'</g>'
         f'</svg>\n'
