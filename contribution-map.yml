@@ -1,0 +1,40 @@
+# Save as: .github/workflows/contribution-map.yml  (in your uzairshahidgithub/uzairshahidgithub profile repo)
+# Also save contribution_map.py as: scripts/contribution_map.py
+name: Contribution map
+
+on:
+  schedule:
+    - cron: "0 */12 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["scripts/contribution_map.py"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate map
+        env:
+          # Optional: add a classic PAT as the CONTRIB_TOKEN secret (scopes: read:user, read:org)
+          # to include contributions to organizations that restrict third-party access.
+          GITHUB_TOKEN: ${{ secrets.CONTRIB_TOKEN || secrets.GITHUB_TOKEN }}
+        run: python scripts/contribution_map.py --user "${{ github.repository_owner }}" --top 10 --out assets/contribution-map.svg
+
+      - name: Commit result
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/contribution-map.svg
+          git diff --cached --quiet || git commit -m "update contribution map"
+          git push
