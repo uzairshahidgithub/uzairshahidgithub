@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-Generate adaptive Dark & Light Repository OptionWheel SVG slices
-(`assets/wheel-{i}.svg` and `assets/wheel-{i}-light.svg`) modeled after the
-React Bits <OptionWheel side="right" /> component, plus optionally sync
-README.md and docs/index.html so live repository updates stay automated end-to-end.
+Generate adaptive Dark & Light auto-rotating Repository OptionWheel SVGs
+(`assets/repo-wheel.svg` and `assets/repo-wheel-light.svg`) + emerald frosted
+launch button (`assets/wheel-launch*.svg`) for README.md, while keeping
+`docs/index.html`, `docs/llms.txt`, and `docs/sitemap.xml` live-synced for the
+manual interactive wheel site.
 """
 import argparse
 import base64
@@ -47,8 +48,37 @@ EXCLUDED_REPOS = {
     "cybertrek-registration",
 }
 
-FULL_W = 640
+FULL_W = 680
 ROW_H = 40
+WHEEL_H = 320
+
+# Conservative Poppins 500 @ 20px character widths so long titles never clip at left curve pullback
+_W20 = {
+    "-": 9.2, "_": 11.5, ".": 5.5, " ": 5.8,
+    "i": 5.6, "l": 5.6, "j": 6.0, "t": 7.6, "f": 7.6, "r": 8.4, "I": 6.0,
+    "1": 7.8, "m": 18.8, "w": 16.8, "M": 18.4, "W": 20.6,
+}
+
+
+def _est_text_width(s, font_px):
+    scale = font_px / 20.0
+    return sum(_W20.get(ch, 14.0 if ch.isupper() else 12.2) for ch in s) * scale
+
+
+def _smootherstep(t):
+    return t * t * t * (t * (t * 6.0 - 15.0) + 10.0)
+
+
+def _vertical_fade_stops(edge_frac=0.22):
+    span = max(0.0, min(0.45, edge_frac)) * 100.0
+    stops = []
+    for i in range(13):
+        a = _smootherstep(i / 12.0)
+        stops.append(f'<stop offset="{(span * i / 12.0):.2f}%" stop-color="#ffffff" stop-opacity="{a:.4f}" />')
+    for i in range(12, -1, -1):
+        a = _smootherstep(i / 12.0)
+        stops.append(f'<stop offset="{(100.0 - span * i / 12.0):.2f}%" stop-color="#ffffff" stop-opacity="{a:.4f}" />')
+    return "".join(stops)
 
 
 def fetch_top_repos(user, limit=9, token=None):
@@ -104,6 +134,196 @@ def _fonts():
     return (
         base64.b64encode(OUTFIT_REGULAR.read_bytes()).decode(),
         base64.b64encode(POPPINS_MEDIUM.read_bytes()).decode(),
+    )
+
+
+def build_animated_wheel_svg(
+    user,
+    repos_meta,
+    dark_mode=True,
+    width=FULL_W,
+    height=WHEEL_H,
+    step_s=3.6,
+):
+    """Build single continuous slowly auto-rotating OptionWheel SVG for GitHub README."""
+    outfit_b64, poppins_b64 = _fonts()
+
+    # Ensure >= 7 slots even if user has fewer repos so circular cylinder stays full without jumps
+    base_list = repos_meta or [
+        {"name": n, "description": "", "url": f"https://github.com/{user}/{n}"}
+        for n in DEFAULT_REPOS[:1]
+    ]
+    repeat_k = 1 if len(base_list) >= 7 else math.ceil(7 / len(base_list))
+    slots = base_list * repeat_k
+    k_slots = len(slots)
+    mid_idx = len(base_list) // 2
+    cycle_s = k_slots * step_s
+
+    cy = height / 2.0
+    anchor_x = width - 74.0  # 606px right text anchor, leaving 74px right margin for rail/indicator + glow
+    row_h = 44.0
+    tilt_deg = 2.5
+    tilt_rad = math.radians(tilt_deg)
+    R = (row_h * 1.15) / tilt_rad
+    curve = 1.25
+
+    # Generate silky continuous 40-step cylinder path:
+    # u=0 -> d=+K/2 (bottom behind mask), u=0.5 -> d=0 (centered inside emerald lens), u=1 -> d=-K/2 (top behind mask)
+    n_kf = 40
+    pos_kf = []
+    tilt_kf = []
+    half_k = k_slots / 2.0
+    vis_cutoff = min(half_k - 0.15, 3.65)
+    fade_edge = max(2.0, vis_cutoff - 0.9)
+
+    for step in range(n_kf + 1):
+        u = step / n_kf
+        pct = u * 100.0
+        d = (0.5 - u) * k_slots  # +half_k down to -half_k
+        ang = max(-math.pi * 0.42, min(math.pi * 0.42, d * tilt_rad))
+        dy = R * math.sin(ang)
+        arc_dx = -(R * (1.0 - math.cos(ang))) * curve * 4.5
+        rot_deg = math.degrees(ang) * 0.92
+        dist = abs(d)
+        sc = max(0.84, 1.07 - dist * 0.055)
+        if dist >= vis_cutoff:
+            op = 0.0
+        elif dist > fade_edge:
+            t_fade = (vis_cutoff - dist) / max(0.01, vis_cutoff - fade_edge)
+            op = 0.20 * _smootherstep(t_fade)
+        else:
+            op = max(0.20, 1.0 - dist * 0.22)
+
+        pos_kf.append(
+            f"{pct:.2f}%{{transform:translate3d({arc_dx:.2f}px,{dy:.2f}px,0);opacity:{op:.3f}}}"
+        )
+        tilt_kf.append(
+            f"{pct:.2f}%{{transform:rotate({rot_deg:.2f}deg) scale({sc:.3f})}}"
+        )
+
+    if dark_mode:
+        rest_col = "#7d8590"
+        active_col = "#ffffff"
+        aura_col, aura_op = "#3fb950", "0.14"
+        rail_col, rail_op = "#3fb950", "0.24"
+        dot_col = "#56d364"
+        glow_op = "0.45"
+    else:
+        rest_col = "#6e7781"
+        active_col = "#0d4423"
+        aura_col, aura_op = "#2da44e", "0.10"
+        rail_col, rail_op = "#1a7f37", "0.20"
+        dot_col = "#1a7f37"
+        glow_op = "0.22"
+
+    rest_items = []
+    lit_items = []
+    max_arc_pullback = abs(R * (1.0 - math.cos(3.2 * tilt_rad)) * curve * 4.5)
+    max_w_allowed = anchor_x - max_arc_pullback - 44.0
+    for idx, meta in enumerate(slots):
+        name = meta["name"]
+        url = meta.get("url") or f"https://github.com/{user}/{name}"
+        font_px = 20.5
+        w_est = _est_text_width(name, font_px)
+        if w_est > max_w_allowed:
+            font_px = max(12.0, font_px * (max_w_allowed / w_est))
+            w_est = _est_text_width(name, font_px)
+        half_w = w_est / 2.0
+
+        # Shift initial phase so `mid_idx` (Fedora-Security-Automation) sits dead-center at t=0
+        delay_s = -(((0.5 - (mid_idx - idx) / k_slots) % 1.0) * cycle_s)
+        y_base = font_px * 0.34
+
+        item_inner = (
+            f'<g class="w-pos" style="animation-delay:{delay_s:.3f}s">'
+            f'<g transform="translate({-half_w:.1f},0)">'
+            f'<g class="w-tilt" style="animation-delay:{delay_s:.3f}s">'
+            f'<g transform="translate({half_w:.1f},0)">'
+            f'<a href="{html.escape(url)}" target="_blank" rel="noopener noreferrer">'
+            f'<title>{html.escape(name)}</title>'
+            f'<text class="ow-item" x="0" y="{y_base:.1f}" text-anchor="end" style="font-size:{font_px:.1f}px">'
+            f'{html.escape(name)}</text></a>'
+            f'</g></g></g></g>'
+        )
+        rest_items.append(item_inner)
+        lit_items.append(item_inner)
+
+    # Subtle curved wheel rim arc + horizontal focus glow across y=cy (no hard box edges)
+    top_ang = -3.1 * tilt_rad
+    bot_ang = 3.1 * tilt_rad
+    rx_arc = anchor_x + 24.0
+    arc_x0 = rx_arc - (R * (1.0 - math.cos(top_ang))) * curve * 4.5
+    arc_y0 = cy + R * math.sin(top_ang)
+    arc_x1 = rx_arc - (R * (1.0 - math.cos(bot_ang))) * curve * 4.5
+    arc_y1 = cy + R * math.sin(bot_ang)
+    ctrl_x = rx_arc + 8.0
+
+    css = f"""
+@font-face{{font-family:'WheelMed';font-style:normal;font-weight:500;src:url(data:font/woff2;base64,{poppins_b64}) format('woff2');}}
+.ow-rest .ow-item{{font-family:'WheelMed',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-weight:500;fill:{rest_col};letter-spacing:-0.3px}}
+.ow-lit .ow-item{{font-family:'WheelMed',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-weight:500;fill:{active_col};letter-spacing:-0.3px}}
+.w-pos{{will-change:transform,opacity;animation:w-arc {cycle_s:.2f}s linear infinite}}
+.w-tilt{{will-change:transform;animation:w-tilt {cycle_s:.2f}s linear infinite}}
+@keyframes w-arc{{{"".join(pos_kf)}}}
+@keyframes w-tilt{{{"".join(tilt_kf)}}}
+@media (prefers-reduced-motion:reduce){{.w-pos,.w-tilt{{animation-play-state:paused!important}}}}
+"""
+
+    repo_names = ", ".join(html.escape(m["name"]) for m in base_list)
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}" '
+        f'role="img" aria-label="Auto-rotating GitHub Repositories Wheel for {html.escape(user)}">'
+        f'<title>{html.escape(user)} Repositories Wheel</title>'
+        f'<desc>Auto-rotating Open Source Repositories of Muhammad Uzair (@{html.escape(user)}): {repo_names}</desc>'
+        f'<defs>'
+        f'<style>{css}</style>'
+        f'<linearGradient id="rw-edge" x1="0%" y1="0%" x2="0%" y2="100%">{_vertical_fade_stops(0.22)}</linearGradient>'
+        f'<mask id="rw-fade-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="{width}" height="{height}">'
+        f'<rect x="0" y="0" width="{width}" height="{height}" fill="url(#rw-edge)" />'
+        f'</mask>'
+        # Complementary center lens & outside masks prevent any double-font ghosting while cross-fading smoothly
+        f'<linearGradient id="rw-lens-grad" x1="0%" y1="0%" x2="0%" y2="100%">'
+        f'<stop offset="39%" stop-color="#000000" />'
+        f'<stop offset="44%" stop-color="#ffffff" />'
+        f'<stop offset="56%" stop-color="#ffffff" />'
+        f'<stop offset="61%" stop-color="#000000" />'
+        f'</linearGradient>'
+        f'<linearGradient id="rw-out-grad" x1="0%" y1="0%" x2="0%" y2="100%">'
+        f'<stop offset="39%" stop-color="#ffffff" />'
+        f'<stop offset="44%" stop-color="#000000" />'
+        f'<stop offset="56%" stop-color="#000000" />'
+        f'<stop offset="61%" stop-color="#ffffff" />'
+        f'</linearGradient>'
+        f'<mask id="rw-lens-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="{width}" height="{height}">'
+        f'<rect x="0" y="0" width="{width}" height="{height}" fill="url(#rw-lens-grad)" />'
+        f'</mask>'
+        f'<mask id="rw-out-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="{width}" height="{height}">'
+        f'<rect x="0" y="0" width="{width}" height="{height}" fill="url(#rw-out-grad)" />'
+        f'</mask>'
+        f'<radialGradient id="rw-center-aura" cx="50%" cy="50%" r="50%">'
+        f'<stop offset="0%" stop-color="{aura_col}" stop-opacity="{aura_op}" />'
+        f'<stop offset="65%" stop-color="{aura_col}" stop-opacity="0.04" />'
+        f'<stop offset="100%" stop-color="{aura_col}" stop-opacity="0.0" />'
+        f'</radialGradient>'
+        f'<filter id="rw-center-glow" x="-10%" y="-40%" width="120%" height="180%">'
+        f'<feDropShadow dx="0" dy="0" stdDeviation="4.5" flood-color="{dot_col}" flood-opacity="{glow_op}" />'
+        f'</filter>'
+        f'</defs>'
+        # Borderless soft emerald backlight aura + curved wheel rim guide & indicator dot
+        f'<g mask="url(#rw-fade-mask)">'
+        f'<ellipse cx="{width * 0.54:.1f}" cy="{cy:.1f}" rx="250" ry="30" fill="url(#rw-center-aura)" />'
+        f'<path d="M {arc_x0:.1f} {arc_y0:.1f} Q {ctrl_x:.1f} {cy:.1f} {arc_x1:.1f} {arc_y1:.1f}" '
+        f'fill="none" stroke="{rail_col}" stroke-opacity="{rail_op}" stroke-width="1.2" stroke-linecap="round" />'
+        f'<circle cx="{ctrl_x - 3:.1f}" cy="{cy:.1f}" r="3.2" fill="{dot_col}" fill-opacity="0.88" />'
+        # Non-overlapping complementary masks: zero double-render ghosting during roll transitions
+        f'<g mask="url(#rw-out-mask)">'
+        f'<g class="ow-rest" transform="translate({anchor_x:.1f},{cy:.1f})">{"".join(rest_items)}</g>'
+        f'</g>'
+        f'<g mask="url(#rw-lens-mask)">'
+        f'<g class="ow-lit" filter="url(#rw-center-glow)" transform="translate({anchor_x:.1f},{cy:.1f})">{"".join(lit_items)}</g>'
+        f'</g>'
+        f'</g>'
+        f'</svg>\n'
     )
 
 
@@ -225,33 +445,23 @@ def build_launch_svg(dark_mode=True):
 
 
 def sync_readme(readme_path, user, repos_meta):
-    """Replace the REPO_WHEEL_START..REPO_WHEEL_END block in README.md with current wheel slices & SEO alt tags."""
+    """Replace REPO_WHEEL_START..REPO_WHEEL_END in README.md with the auto-rotating wheel + interactive launch pill."""
     p = Path(readme_path)
     src = p.read_text(encoding="utf-8")
-    mid_idx = len(repos_meta) // 2
-    rows = []
-    for idx, meta in enumerate(repos_meta):
-        repo = meta["name"]
-        desc = meta.get("description") or f"{repo} open-source repository by Muhammad Uzair (@{user})"
-        alt_txt = f"{repo} — {desc}"
-        pic = (
-            f'<picture><source media="(prefers-color-scheme: dark)" srcset="assets/wheel-{idx}.svg" />'
-            f'<source media="(prefers-color-scheme: light)" srcset="assets/wheel-{idx}-light.svg" />'
-            f'<img src="assets/wheel-{idx}.svg" alt="{html.escape(alt_txt)}" /></picture>'
-        )
-        if idx == mid_idx:
-            row = f'  <a href="https://github.com/{user}/{repo}" target="_blank" rel="noopener noreferrer" title="{html.escape(alt_txt)}">{pic}</a>'
-        else:
-            row = f'  {pic}'
-        if idx < len(repos_meta) - 1:
-            row += "<br />"
-        rows.append(row)
+    repo_list_str = ", ".join(m["name"] for m in repos_meta)
+    alt_txt = f"Auto-rotating GitHub Repositories Wheel for Muhammad Uzair (@{user}): {repo_list_str}"
     block = (
         "<!-- REPO_WHEEL_START -->\n"
         '<div align="center">\n'
-        "  <!-- Repository OptionWheel: only active white centered item is clickable on GitHub (scripts/repo_wheel.py) -->\n"
-        + "\n".join(rows)
-        + "\n</div>\n\n<br />\n\n"
+        "  <!-- Slowly auto-rotating Repository OptionWheel SVG for GitHub README (scripts/repo_wheel.py) -->\n"
+        f'  <a href="https://{user}.github.io/{user}/" target="_blank" rel="noopener noreferrer" title="Open Interactive Repository Wheel for Muhammad Uzair (@{user})">\n'
+        "    <picture>\n"
+        '      <source media="(prefers-color-scheme: dark)" srcset="assets/repo-wheel.svg" />\n'
+        '      <source media="(prefers-color-scheme: light)" srcset="assets/repo-wheel-light.svg" />\n'
+        f'      <img src="assets/repo-wheel.svg" alt="{html.escape(alt_txt)}" />\n'
+        "    </picture>\n"
+        "  </a>\n"
+        "</div>\n\n<br />\n\n"
         '<div align="center">\n'
         f'  <a href="https://{user}.github.io/{user}/" target="_blank" rel="noopener noreferrer" title="Open Interactive Repository Wheel &amp; Portfolio for Muhammad Uzair (@{user})">'
         '<picture><source media="(prefers-color-scheme: dark)" srcset="assets/wheel-launch.svg" />'
@@ -268,7 +478,7 @@ def sync_readme(readme_path, user, repos_meta):
     )
     if count:
         p.write_text(updated, encoding="utf-8")
-        print(f"synced wheel rows in {p}")
+        print(f"synced animated repository wheel in {p}")
 
 
 def sync_docs(docs_dir, user, repos_meta):
@@ -388,15 +598,13 @@ def main():
 
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    for old in out_dir.glob("wheel-*.svg"):
+    # Remove old static wheel-0..N slice files if present
+    for old in out_dir.glob("wheel-[0-9]*.svg"):
         old.unlink()
 
-    for idx, meta in enumerate(repos_meta):
-        for dark, suffix in ((True, ""), (False, "-light")):
-            svg = build_row_svg(meta["name"], idx, mid_idx, dark_mode=dark, width=FULL_W)
-            (out_dir / f"wheel-{idx}{suffix}.svg").write_text(svg, encoding="utf-8")
-
     for dark, suffix in ((True, ""), (False, "-light")):
+        wheel_svg = build_animated_wheel_svg(args.user, repos_meta, dark_mode=dark)
+        (out_dir / f"repo-wheel{suffix}.svg").write_text(wheel_svg, encoding="utf-8")
         (out_dir / f"wheel-launch{suffix}.svg").write_text(build_launch_svg(dark_mode=dark), encoding="utf-8")
 
     if args.update_readme:
@@ -404,7 +612,7 @@ def main():
     if args.update_docs:
         sync_docs("docs", args.user, repos_meta)
 
-    print(f"wrote {len(repos_meta)} wheel rows + interactive launch pill centered at '{repos_meta[mid_idx]['name']}'")
+    print(f"wrote auto-rotating repo-wheel*.svg ({len(repos_meta)} repos, centered initially at '{repos_meta[mid_idx]['name']}')")
 
 
 if __name__ == "__main__":
