@@ -22,21 +22,43 @@ jobs:
   deploy:
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.check.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
+      - name: Check GitHub Pages configuration
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          code=$(curl -s -o /tmp/pages.json -w "%{http_code}" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/pages")
+          if [ "$code" = "200" ]; then
+            build_type=$(python3 -c 'import json; print(json.load(open("/tmp/pages.json")).get("build_type", "legacy"))')
+            html_url=$(python3 -c 'import json; print(json.load(open("/tmp/pages.json")).get("html_url", ""))')
+            echo "build_type=$build_type" >> "$GITHUB_OUTPUT"
+            echo "page_url=$html_url" >> "$GITHUB_OUTPUT"
+            echo "GitHub Pages active: build_type=$build_type url=$html_url"
+          else
+            echo "::error::GitHub Pages is not enabled yet. Open https://github.com/${{ github.repository }}/settings/pages and set Source to 'GitHub Actions' (or Branch 'main' / 'docs')."
+            exit 1
+          fi
+
       - uses: actions/checkout@v4
+        if: steps.check.outputs.build_type == 'workflow'
 
       - name: Setup Pages
+        if: steps.check.outputs.build_type == 'workflow'
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - name: Upload docs artifact
+        if: steps.check.outputs.build_type == 'workflow'
         uses: actions/upload-pages-artifact@v3
         with:
           path: docs
 
       - name: Deploy to GitHub Pages
         id: deployment
+        if: steps.check.outputs.build_type == 'workflow'
         uses: actions/deploy-pages@v4
