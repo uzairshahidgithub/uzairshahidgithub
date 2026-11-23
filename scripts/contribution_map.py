@@ -241,6 +241,10 @@ def plan(orgs, people):
         k = len(items)
         ring = (230, 150) if k <= 4 else ((290, 190) if k <= 9 else (340, 215))
         groups = [("org" if orgs else "user", items, ring)]
+    # few nodes -> tighter rings, so the map never looks empty
+    total = len(orgs) + len(people)
+    sc = min(1.0, 0.76 + 0.04 * total)
+    groups = [(k, items, (rx * sc, ry * sc)) for k, items, (rx, ry) in groups]
     outer = groups[-1][2]
     return groups, outer[0] + 78, outer[1] + 84
 
