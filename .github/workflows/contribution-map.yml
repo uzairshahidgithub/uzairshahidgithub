@@ -1,17 +1,19 @@
-# Save as: .github/workflows/contribution-map.yml  (in your uzairshahidgithub/uzairshahidgithub profile repo)
-# Also save contribution_map.py as: scripts/contribution_map.py
 name: Contribution map
 
 on:
   schedule:
-    - cron: "0 */12 * * *"
+    - cron: "5 */4 * * *"
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["scripts/**"]
+    paths: ["scripts/contribution_map.py", "scripts/contributions_count.py", ".github/workflows/contribution-map.yml"]
 
 permissions:
   contents: write
+
+concurrency:
+  group: contrib-map
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -19,22 +21,35 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Generate map
+      - name: Generate contribution map and total count
         env:
-          # Optional: add a classic PAT as the CONTRIB_TOKEN secret (scopes: read:user, read:org)
-          # to include contributions to organizations that restrict third-party access.
+          # Optional: add a classic PAT as CONRIB/CONTRIB_TOKEN secret (scopes: read:user, read:org)
+          # to include contributions in orgs that restrict third-party access.
           GITHUB_TOKEN: ${{ secrets.CONTRIB_TOKEN || secrets.GITHUB_TOKEN }}
-        run: python scripts/contribution_map.py --user "${{ github.repository_owner }}" --top-orgs 8 --top-people 10 --out assets/contribution-map.svg
+        run: |
+          python scripts/contribution_map.py --user "${{ github.repository_owner }}" --top-orgs 8 --top-people 10 --out assets/contribution-map.svg
+          python scripts/contributions_count.py --user "${{ github.repository_owner }}" --out-dir assets
 
-      - name: Commit result
+      - name: Commit & safely push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/contribution-map.svg
-          git diff --cached --quiet || git commit -m "update contribution map"
-          git push
+          git add assets/contribution-map.svg assets/contributions-count.svg assets/contributions-count-light.svg
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "update contribution map"
+          for attempt in 1 2 3 4 5; do
+            git push && exit 0
+            echo "Push conflict on attempt $attempt; rebasing..."
+            git pull --rebase --autostash origin main
+          done
+          exit 1

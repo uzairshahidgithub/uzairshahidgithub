@@ -1,0 +1,51 @@
+name: Repo wheel
+
+on:
+  schedule:
+    - cron: "25 */4 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["scripts/repo_wheel.py", "docs/index.html", ".github/workflows/repo-wheel.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: repo-wheel
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate repository wheel and SEO manifests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python scripts/repo_wheel.py --user "${{ github.repository_owner }}" --live --update-readme --update-docs
+
+      - name: Commit & safely push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A assets/ README.md docs/index.html docs/llms.txt docs/sitemap.xml
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "update repository wheel"
+          for attempt in 1 2 3 4 5; do
+            git push && exit 0
+            echo "Push conflict on attempt $attempt; rebasing..."
+            git pull --rebase --autostash origin main
+          done
+          exit 1

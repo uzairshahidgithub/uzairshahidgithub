@@ -1,0 +1,50 @@
+name: Hero header
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["scripts/hero_header.py", "scripts/fonts/**", ".github/workflows/hero-header.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: hero-header
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Pillow
+        run: pip install --no-cache-dir pillow
+
+      - name: Generate hero header banners
+        run: python scripts/hero_header.py --out-dir assets
+
+      - name: Commit & safely push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/hero-header.svg assets/hero-header-light.svg
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "update hero header"
+          for attempt in 1 2 3 4 5; do
+            git push && exit 0
+            echo "Push conflict on attempt $attempt; rebasing..."
+            git pull --rebase --autostash origin main
+          done
+          exit 1
