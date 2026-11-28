@@ -27,4 +27,4 @@
 - [Detection-Engineering-Alert-Tuning-Threat-Hunting-Lab](https://github.com/uzairshahidgithub/Detection-Engineering-Alert-Tuning-Threat-Hunting-Lab) — Detection Engineering, Alert Tuning & Threat Hunting VLab | Medium-Expert | 4 Hours | Wazuh 4.x + Zeek 6.x | Own Lab Only MITRE: T1110.001 | T1059.001 | T1078 | T1071.004 | T1021.002
 - [WiFi-Security-Honeypots-Network-Surveillance-Lab](https://github.com/uzairshahidgithub/WiFi-Security-Honeypots-Network-Surveillance-Lab) — WiFi Security, Honeypots & Network Surveillance Lab | Intermediate | 3 Hours | Free Tools Only | Own Network Required MITRE: T1040 | T1110.002 | T1557.002 | T1027.003 | T1566.001
 
-_Auto-updated on 2026-11-27 UTC_
+_Auto-updated on 2026-11-28 UTC_
